@@ -251,7 +251,7 @@
                         let color;
                         // For more than two species, create a custom color scale.
                         const colorScale = chroma
-                            .scale(['red', 'orange', 'gold', 'darkgreen', 'cyan'])
+                            .scale(['red', 'orange', 'yellow', 'darkgreen', 'cyan'])
                             .mode('lch')
                             .colors(totalSubspecies);
 
@@ -260,11 +260,6 @@
 
                         return color;
                     }
-
-
-
-
-
 
 
 
@@ -436,11 +431,10 @@
             const div = L.DomUtil.create('div', 'layer-toggle-control');
             div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
             div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show Species Ranges</label></div>';
-            div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option><option value="Picus canus">Picus canus</option></select></label></div>';
+            div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option><option value="Picus canus">Picus canus</option><option value="Eremophila alpestris">Eremophila alpestris</option></select></label></div>';
             return div;
         };
         toggleControl.addTo(map);
-
 
 
         // Attach some CSS styles
