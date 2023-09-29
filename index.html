@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>American Crow · Corvus brachyrhynchos</title>
+
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+
+
+
+
+    <style>
+        #map {
+            height: 500px;
+            width: 960px;
+        }
+
+        .info.legend {
+            background-color: white;
+            border: 1px solid black;
+            padding: 10px;
+        }
+
+        .info.legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+
+
+
+
+        #toggle-btn {
+            display: none;
+            background-color: #f5f5f5;
+            /* Light gray background */
+            color: #333;
+            /* Almost black text */
+            border: 1px solid #ddd;
+            /* Slightly darker gray border */
+            padding: 10px 0;
+            /* Padding only on top and bottom, since we're setting a fixed width */
+            cursor: pointer;
+            /* Hand cursor on hover */
+            border-radius: 5px;
+            /* Softly rounded corners */
+            font-size: 0.9em;
+            /* Moderate font size */
+            transition: background-color 0.3s, color 0.3s;
+            /* Smooth transition effect */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* A subtle shadow for some depth */
+
+            width: 155px;
+            /* Fixed width */
+            text-align: center;
+            /* Center the text horizontally */
+            display: inline-block;
+            /* Allows the button to be used inline with other elements but maintain block styling properties */
+            line-height: normal;
+            /* Ensures consistent vertical alignment of text */
+        }
+
+        #toggle-btn:hover {
+            background-color: #e5e5e5;
+            /* Slightly darker gray when hovered */
+            color: #222;
+            /* Darker text for contrast */
+        }
+
+        #toggle-btn:active {
+            background-color: #d5d5d5;
+            /* Even darker when pressed */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            /* Reduced shadow for "pressed" effect */
+        }
+    </style>
+
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"
+        integrity="sha512-6ZCLMiYwTeli2rVh3XAPxy3YoR5fVxGdH/pz+KMCzRY2M65Emgkw00Yqmhh8qLGeYQ3LbVZGdmOX9KUjSKr0TA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"
+        integrity="sha512-fYyZwU1wU0QWB4Yutd/Pvhy5J1oWAwFXun1pt+Bps04WSe4Aq6tyHlT4+MHSJhD8JlLfgLuC4CbCnX5KHSjyCg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"
+        integrity="sha512-3gJwYpMe3QewGELv8k/BX9vcqhryRdzRMxVfq6ngyWXwo03GFEzjsUm8Q7RZcHPHksttq7/GFoxjCVUjkjvPdw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css'
+        rel='stylesheet' />
+
+
+    <link rel="stylesheet" href="L.switchBasemap.css">
+
+
+    <script type="text/javascript" src="L.switchBasemap.js"></script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw-src.css"
+        integrity="sha512-vJfMKRRm4c4UupyPwGUZI8U651mSzbmmPgR3sdE3LcwBPsdGeARvUM5EcSTg34DK8YIRiIo+oJwNfZPMKEQyug=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
+        integrity="sha512-ozq8xQKq6urvuU6jNgkfqAmT7jKN2XumbrX1JiB3TnF7tI48DPI4Gy1GXKD/V3EExgAs1V+pRO7vwtS1LHg0Gw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"
+        integrity="sha512-OFs3W4DIZ5ZkrDhBFtsCP6JXtMEDGmhl0QPlmWYBJay40TT1n3gt2Xuw8Pf/iezgW9CdabjkNChRqozl/YADmg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
+
+
+
+
+</head>
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <div id="map-legend"></div>
+
+
+    </div>
+
+
+    <script>
+
+        // Create a Leaflet map and set the initial view
+        var map = L.map('map', {
+            worldCopyJump: true,
+            zoomControl: false, // default zoom control is on the left top.
+            wheelPxPerZoomLevel: 120 // Default is 60, try doubling to decrease sensitivity
+        }).setView([35, 15], 2);
+
+
+        L.control.scale({ metric: true, imperial: false, position: 'bottomright' }).addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        map.addControl(new L.Control.Fullscreen({ position: 'topright' }));
+
+        // Define basemap layers with their respective properties
+        new L.basemapsSwitcher([
+            {
+                layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri'
+                }).setOpacity(0.9).addTo(map),//DEFAULT MAP
+                maxZoom: 17,
+                icon: 'terrain.jpeg',
+                name: 'Terrain'
+            },
+            {
+                layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: 'Tiles &copy; Esri'
+                }).setOpacity(0.9),
+                icon: 'topo.jpg',
+                name: 'Topographic'
+            },
+            {
+                layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                }).setOpacity(0.9),
+                maxZoom: 21,
+                icon: 'satellite.jpg',
+                name: 'Satellite'
+            },
+            {
+                layer: L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors)'
+                }),
+                icon: 'osm.png',
+                name: 'OSM'
+            },
+        ], { position: 'bottomleft' }).addTo(map);
+
+        const markersLayer = L.layerGroup();
+        let kmzLayer;
+
+        fetch("https://xeno-canto.org/api/2/recordings?query=Corvus brachyrhynchos")
+            .then((response) => response.json())
+            .then((data) => {
+                const recordings = data.recordings.filter((recording) => recording.lat && recording.lng);
+
+                const uniqueSubspecies = [...new Set(recordings.map((recording) => recording.ssp || "undefined"))]
+                    .sort((a, b) => (a === "undefined" ? 1 : b === "undefined" ? -1 : 0));
+
+
+                    function getColor(subspecies) {
+    if (subspecies === "undefined") return "lightgray";
+
+    const index = uniqueSubspecies.indexOf(subspecies);
+    const maxIndex = uniqueSubspecies.length - 1;
+
+    // Calculate Hue
+    const hue = (index / maxIndex) * 180; // Vary Hue from 0 (red) to 180 (cyan)
+
+    // Set default Saturation and Lightness
+    let saturation = 100; 
+    let lightness = 50;   
+
+    // If there are more than 6 unique subspecies, adjust Saturation and Lightness
+    if (uniqueSubspecies.length > 5) {
+        saturation = index % 2 === 0 ? 100 : 60;
+        lightness = index % 3 === 0 ? 55 : 45;
+    }
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+
+                var legend = L.control({ position: "topleft" });
+                legend.onAdd = function (map) {
+                    var div = L.DomUtil.create("div", "info legend");
+                    div.innerHTML = "<h4>Subspecies Legend</h4>";
+                    const counts = {};
+                    recordings.forEach((recording) => {
+                        const subspecies = recording.ssp || "undefined";
+                        counts[subspecies] = (counts[subspecies] || 0) + 1;
+                    });
+                    uniqueSubspecies.forEach((subspecies) => {
+                        div.innerHTML += `<i style="background:${getColor(subspecies)}"></i> ${subspecies}: ${counts[subspecies] || 0}<br>`;
+                    });
+                    return div;
+                };
+                legend.addTo(map);
+
+                // Attach some CSS styles to the legend
+                const legendStyle = document.createElement('style');
+                legendStyle.innerHTML = `
+  .info.legend {
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  }
+  .info.legend h4 {
+    margin: 0 0 10px;
+    font-weight: bold;
+  }
+  .info.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+  }
+`;
+                document.head.appendChild(legendStyle);
+
+
+                const locationGroups = {};
+
+                recordings.forEach((recording) => {
+                    const key = `${recording.lat},${recording.lng}`;
+                    if (!locationGroups[key]) locationGroups[key] = [];
+                    locationGroups[key].push(recording);
+                });
+
+                // Create an empty LatLngBounds object
+                const bounds = new L.LatLngBounds();
+
+
+                for (const location in locationGroups) {
+                    const [lat, lng] = location.split(",").map(Number);
+                    const recordingsAtLocation = locationGroups[location];
+                    const subspeciesCounts = {};
+
+                    recordingsAtLocation.forEach((recording) => {
+                        const subspecies = recording.ssp || "undefined";
+                        subspeciesCounts[subspecies] = (subspeciesCounts[subspecies] || 0) + 1;
+                    });
+
+                    const pieData = Object.keys(subspeciesCounts).map((subspecies) => ({
+                        ssp: subspecies,
+                        count: subspeciesCounts[subspecies],
+                        color: getColor(subspecies),
+                    }));
+
+                    const canvas = document.createElement("canvas");
+                    canvas.width = 17;
+                    canvas.height = 17; // Set canvas size to 17x17
+                    const ctx = canvas.getContext("2d");
+
+                    // Draw the outer circle
+                    const outerRadius = 7.5; // Adjust the outer radius as needed for 17x17 size
+                    ctx.beginPath();
+                    ctx.arc(8.5, 8.5, outerRadius, 0, 2 * Math.PI); // Centered at (8.5, 8.5)
+                    ctx.fillStyle = "none"; // No fill color
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    // Sort the pieData array so that slices with defined ssp come first
+                    pieData.sort((a, b) => {
+                        if (a.ssp === "undefined") return 1;
+                        if (b.ssp === "undefined") return -1;
+                        return 0;
+                    });
+
+                    let startAngle = -Math.PI / 2; // Start from the top (12 o'clock position)
+                    pieData.forEach((slice) => {
+                        const sliceAngle = (slice.count / recordingsAtLocation.length) * 2 * Math.PI;
+
+                        // Draw each pie chart segment
+                        ctx.beginPath();
+                        ctx.moveTo(8.5, 8.5);
+                        const innerRadius = 6.5; // Adjust the inner radius as needed for 17x17 size
+                        ctx.arc(8.5, 8.5, innerRadius, startAngle, startAngle + sliceAngle);
+                        ctx.closePath();
+                        ctx.fillStyle = slice.color;
+                        ctx.fill();
+
+                        startAngle += sliceAngle;
+                    });
+
+
+                    const icon = L.divIcon({
+                        className: "pie-chart-marker",
+                        html: `<img src="${canvas.toDataURL()}" width="17" height="17" />`, // Adjust width and height to 17x17
+                    });
+
+                    let info = "<strong>Subspecies in this location:</strong><br>";
+                    Object.keys(subspeciesCounts).forEach((subspecies) => {
+                        info += `${subspecies}: ${subspeciesCounts[subspecies]} recordings<br>`;
+                    });
+
+                    const marker = L.marker([lat, lng], {
+                        icon: icon,
+                        zIndexOffset: recordingsAtLocation.some(rec => rec.ssp) ? 1000 : 0
+                    });
+                    marker.bindPopup(info);
+                    // Add the marker to the layerGroup
+                    markersLayer.addLayer(marker);
+
+                    // After creating all markers, fit the map view to the bounds
+                    bounds.extend(marker.getLatLng());
+
+                    markersLayer.addTo(map);
+
+                    marker.bindPopup(info);
+                }
+
+                const kmzLayer = new L.KMZLayer("Corvus_brachyrhynchos.kmz");
+                kmzLayer.addTo(map);
+
+                document.getElementById('kmzToggle').addEventListener('change', function (e) {
+                    if (e.target.checked) {
+                        if (kmzLayer) kmzLayer.addTo(map);
+                    } else {
+                        if (kmzLayer) map.removeLayer(kmzLayer);
+                    }
+                });
+
+                map.fitBounds(bounds);
+
+
+
+
+
+            });
+
+        // Create a custom control with checkboxes
+        const toggleControl = L.control({ position: 'topright' });
+        toggleControl.onAdd = function (map) {
+            const div = L.DomUtil.create('div', 'layer-toggle-control');
+            div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
+            div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show KMZ Layer</label></div>';
+            return div;
+        };
+        toggleControl.addTo(map);
+
+        // Attach some CSS styles
+        const style = document.createElement('style');
+        style.innerHTML = `
+  .layer-toggle-control {
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+  }
+  .toggle-container {
+    margin-bottom: 5px;
+  }
+  .toggle-container label {
+    font-weight: bold;
+  }
+  .toggle-container input[type="checkbox"] {
+    margin-right: 5px;
+  }
+`;
+        document.head.appendChild(style);
+
+
+        // Attach event listeners to the checkboxes
+        document.getElementById('markersToggle').addEventListener('change', function (e) {
+            if (e.target.checked) {
+                markersLayer.addTo(map);
+            } else {
+                map.removeLayer(markersLayer);
+            }
+        });
+
+
+    </script>
+
+</body>
+
+
+</html>
