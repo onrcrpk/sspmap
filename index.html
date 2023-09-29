@@ -131,6 +131,9 @@
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
 
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chroma-js/2.4.2/chroma.min.js"
+        integrity="sha512-zInFF17qBFVvvvFpIfeBzo7Tj7+rQxLeTJDmbxjBz5/zIr89YVbTNelNhdTT+/DCrxoVzBeUPVFJsczKbB7sew=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
 </head>
@@ -225,36 +228,39 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
                     function getColor(subspecies) {
                         if (subspecies === "undefined") return "lightgray";
 
-    // Find the index in the sorted uniqueSubspecies array
-    const sortedSubspecies = [...uniqueSubspecies].sort((a, b) => (a === "undefined" ? 1 : b === "undefined" ? -1 : a.localeCompare(b)));
-    const index = sortedSubspecies.indexOf(subspecies);
-    const totalSubspecies = uniqueSubspecies.length;
+                        const sortedSubspecies = [...uniqueSubspecies].sort((a, b) =>
+                            (a === "undefined" ? 1 : b === "undefined" ? -1 : a.localeCompare(b))
+                        );
 
-                        // Calculate Hue - Uniformly distribute hues around the circle
-                        const hue = (index / (totalSubspecies || 1)) * 180;
+                        const index = sortedSubspecies.indexOf(subspecies);
+                        const totalSubspecies = uniqueSubspecies.length;
 
-                        // Define array of saturation and lightness combinations for smoother transitions at the beginning
-                        const variations = [
-                            { s: 90, l: 60 },  // Smoother transitions
-                            { s: 80, l: 65 },
-                            { s: 100, l: 50 },
-                            { s: 80, l: 60 },
-                            { s: 100, l: 40 },
-                            { s: 90, l: 50 },  // More distinct transitions towards green
-                            { s: 100, l: 30 },
-                            { s: 90, l: 40 },
-                            { s: 80, l: 50 },
-                            { s: 100, l: 20 }, // Most distinct
-                        ];
+                        let color;
+                        // For more than two species, create a custom color scale.
+                        const colorScale = chroma
+                            .scale(['red', 'orange', 'gold', 'darkgreen', 'cyan'])
+                            .mode('lch')
+                            .colors(totalSubspecies);
 
-                        // Pick variation based on index
-                        const variation = variations[index % variations.length];
+                        // Get the color for the current subspecies from the color scale
+                        color = colorScale[index];
 
-                        return `hsl(${hue}, ${variation.s}%, ${variation.l}%)`;
+                        return color;
                     }
+
 
 
 
@@ -430,7 +436,7 @@
             const div = L.DomUtil.create('div', 'layer-toggle-control');
             div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
             div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show Species Ranges</label></div>';
-            div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option></select></label></div>';
+            div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option><option value="Picus canus">Picus canus</option></select></label></div>';
             return div;
         };
         toggleControl.addTo(map);
@@ -470,9 +476,18 @@
 
 
 
-        // Initialize the map with the first species in the dropdown
-        const initialSpecies = document.getElementById('speciesSelect').value;
-        fetchData(initialSpecies);
+        // Get the selected value from the dropdown
+        const speciesSelect = document.getElementById('speciesSelect');
+        const initialSpecies = speciesSelect.value;
+
+        // Check if a valid species is selected before fetching data
+        if (initialSpecies) {
+            fetchData(initialSpecies);
+        } else {
+            // Handle the case where no species is selected, e.g., display a message
+            console.log('No species selected');
+        }
+
 
 
         // Dropdown selection event listener
