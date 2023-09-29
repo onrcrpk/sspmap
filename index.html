@@ -225,14 +225,13 @@
 
 
 
-
-
-
                     function getColor(subspecies) {
                         if (subspecies === "undefined") return "lightgray";
 
-                        const index = uniqueSubspecies.indexOf(subspecies);
-                        const totalSubspecies = uniqueSubspecies.length;
+    // Find the index in the sorted uniqueSubspecies array
+    const sortedSubspecies = [...uniqueSubspecies].sort((a, b) => (a === "undefined" ? 1 : b === "undefined" ? -1 : a.localeCompare(b)));
+    const index = sortedSubspecies.indexOf(subspecies);
+    const totalSubspecies = uniqueSubspecies.length;
 
                         // Calculate Hue - Uniformly distribute hues around the circle
                         const hue = (index / (totalSubspecies || 1)) * 180;
