@@ -194,60 +194,94 @@
             },
         ], { position: 'bottomleft' }).addTo(map);
 
-        const markersLayer = L.layerGroup();
+        const markersLayer = L.layerGroup().addTo(map);
         let kmzLayer;
-
-        fetch("https://xeno-canto.org/api/2/recordings?query=Corvus brachyrhynchos")
-            .then((response) => response.json())
-            .then((data) => {
-                const recordings = data.recordings.filter((recording) => recording.lat && recording.lng);
-
-                const uniqueSubspecies = [...new Set(recordings.map((recording) => recording.ssp || "undefined"))]
-                    .sort((a, b) => (a === "undefined" ? 1 : b === "undefined" ? -1 : 0));
+        let currentLegend;
 
 
-                    function getColor(subspecies) {
+        function fetchData(species) {
+            // Clear existing markers
+            markersLayer.clearLayers();
+
+            // Remove existing KMZ layer if it exists
+            if (kmzLayer) {
+                map.removeLayer(kmzLayer);
+            }
+
+            // Remove existing legend if it exists
+            if (currentLegend) {
+                map.removeControl(currentLegend);
+            }
+
+
+
+            fetch(`https://xeno-canto.org/api/2/recordings?query=${species}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    const recordings = data.recordings.filter((recording) => recording.lat && recording.lng);
+
+                    const uniqueSubspecies = [...new Set(recordings.map((recording) => recording.ssp || "undefined"))]
+                        .sort((a, b) => (a === "undefined" ? 1 : b === "undefined" ? -1 : 0));
+
+
+
+
+
+
+                        function getColor(subspecies) {
     if (subspecies === "undefined") return "lightgray";
 
     const index = uniqueSubspecies.indexOf(subspecies);
-    const maxIndex = uniqueSubspecies.length - 1;
+    const totalSubspecies = uniqueSubspecies.length;
 
-    // Calculate Hue
-    const hue = (index / maxIndex) * 180; // Vary Hue from 0 (red) to 180 (cyan)
+    // Calculate Hue - Uniformly distribute hues around the circle
+    const hue = (index / (totalSubspecies || 1)) * 180;
 
-    // Set default Saturation and Lightness
-    let saturation = 100; 
-    let lightness = 50;   
+    // Define array of saturation and lightness combinations for smoother transitions at the beginning
+    const variations = [
+        { s: 90, l: 60 },  // Smoother transitions
+        { s: 80, l: 65 },
+        { s: 100, l: 50 },
+        { s: 80, l: 60 },
+        { s: 100, l: 40 }, 
+        { s: 90, l: 50 },  // More distinct transitions towards green
+        { s: 100, l: 30 },
+        { s: 90, l: 40 },
+        { s: 80, l: 50 },
+        { s: 100, l: 20 }, // Most distinct
+    ];
 
-    // If there are more than 6 unique subspecies, adjust Saturation and Lightness
-    if (uniqueSubspecies.length > 5) {
-        saturation = index % 2 === 0 ? 100 : 60;
-        lightness = index % 3 === 0 ? 55 : 45;
-    }
+    // Pick variation based on index
+    const variation = variations[index % variations.length];
 
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    return `hsl(${hue}, ${variation.s}%, ${variation.l}%)`;
 }
 
 
-                var legend = L.control({ position: "topleft" });
-                legend.onAdd = function (map) {
-                    var div = L.DomUtil.create("div", "info legend");
-                    div.innerHTML = "<h4>Subspecies Legend</h4>";
-                    const counts = {};
-                    recordings.forEach((recording) => {
-                        const subspecies = recording.ssp || "undefined";
-                        counts[subspecies] = (counts[subspecies] || 0) + 1;
-                    });
-                    uniqueSubspecies.forEach((subspecies) => {
-                        div.innerHTML += `<i style="background:${getColor(subspecies)}"></i> ${subspecies}: ${counts[subspecies] || 0}<br>`;
-                    });
-                    return div;
-                };
-                legend.addTo(map);
 
-                // Attach some CSS styles to the legend
-                const legendStyle = document.createElement('style');
-                legendStyle.innerHTML = `
+
+
+
+
+                    var legend = L.control({ position: "topleft" });
+                    legend.onAdd = function (map) {
+                        var div = L.DomUtil.create("div", "info legend");
+                        div.innerHTML = "<h4>Subspecies Legend</h4>";
+                        const counts = {};
+                        recordings.forEach((recording) => {
+                            const subspecies = recording.ssp || "undefined";
+                            counts[subspecies] = (counts[subspecies] || 0) + 1;
+                        });
+                        uniqueSubspecies.sort().forEach((subspecies) => {
+    div.innerHTML += `<i style="background:${getColor(subspecies)}"></i> ${subspecies}: ${counts[subspecies] || 0}<br>`;
+});
+                        return div;
+                    };
+                    legend.addTo(map);
+                    currentLegend = legend;
+                    // Attach some CSS styles to the legend
+                    const legendStyle = document.createElement('style');
+                    legendStyle.innerHTML = `
   .info.legend {
     background-color: white;
     padding: 10px;
@@ -266,129 +300,136 @@
     opacity: 0.7;
   }
 `;
-                document.head.appendChild(legendStyle);
+                    document.head.appendChild(legendStyle);
 
 
-                const locationGroups = {};
+                    const locationGroups = {};
 
-                recordings.forEach((recording) => {
-                    const key = `${recording.lat},${recording.lng}`;
-                    if (!locationGroups[key]) locationGroups[key] = [];
-                    locationGroups[key].push(recording);
-                });
-
-                // Create an empty LatLngBounds object
-                const bounds = new L.LatLngBounds();
-
-
-                for (const location in locationGroups) {
-                    const [lat, lng] = location.split(",").map(Number);
-                    const recordingsAtLocation = locationGroups[location];
-                    const subspeciesCounts = {};
-
-                    recordingsAtLocation.forEach((recording) => {
-                        const subspecies = recording.ssp || "undefined";
-                        subspeciesCounts[subspecies] = (subspeciesCounts[subspecies] || 0) + 1;
+                    recordings.forEach((recording) => {
+                        const key = `${recording.lat},${recording.lng}`;
+                        if (!locationGroups[key]) locationGroups[key] = [];
+                        locationGroups[key].push(recording);
                     });
 
-                    const pieData = Object.keys(subspeciesCounts).map((subspecies) => ({
-                        ssp: subspecies,
-                        count: subspeciesCounts[subspecies],
-                        color: getColor(subspecies),
-                    }));
+                    // Create an empty LatLngBounds object
+                    const bounds = new L.LatLngBounds();
 
-                    const canvas = document.createElement("canvas");
-                    canvas.width = 17;
-                    canvas.height = 17; // Set canvas size to 17x17
-                    const ctx = canvas.getContext("2d");
 
-                    // Draw the outer circle
-                    const outerRadius = 7.5; // Adjust the outer radius as needed for 17x17 size
-                    ctx.beginPath();
-                    ctx.arc(8.5, 8.5, outerRadius, 0, 2 * Math.PI); // Centered at (8.5, 8.5)
-                    ctx.fillStyle = "none"; // No fill color
-                    ctx.strokeStyle = "black";
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
+                    for (const location in locationGroups) {
+                        const [lat, lng] = location.split(",").map(Number);
+                        const recordingsAtLocation = locationGroups[location];
+                        const subspeciesCounts = {};
 
-                    // Sort the pieData array so that slices with defined ssp come first
-                    pieData.sort((a, b) => {
-                        if (a.ssp === "undefined") return 1;
-                        if (b.ssp === "undefined") return -1;
-                        return 0;
-                    });
+                        recordingsAtLocation.forEach((recording) => {
+                            const subspecies = recording.ssp || "undefined";
+                            subspeciesCounts[subspecies] = (subspeciesCounts[subspecies] || 0) + 1;
+                        });
 
-                    let startAngle = -Math.PI / 2; // Start from the top (12 o'clock position)
-                    pieData.forEach((slice) => {
-                        const sliceAngle = (slice.count / recordingsAtLocation.length) * 2 * Math.PI;
+                        const pieData = Object.keys(subspeciesCounts).map((subspecies) => ({
+                            ssp: subspecies,
+                            count: subspeciesCounts[subspecies],
+                            color: getColor(subspecies),
+                        }));
 
-                        // Draw each pie chart segment
+                        const canvas = document.createElement("canvas");
+                        canvas.width = 17;
+                        canvas.height = 17; // Set canvas size to 17x17
+                        const ctx = canvas.getContext("2d");
+
+                        // Draw the outer circle
+                        const outerRadius = 7.5; // Adjust the outer radius as needed for 17x17 size
                         ctx.beginPath();
-                        ctx.moveTo(8.5, 8.5);
-                        const innerRadius = 6.5; // Adjust the inner radius as needed for 17x17 size
-                        ctx.arc(8.5, 8.5, innerRadius, startAngle, startAngle + sliceAngle);
-                        ctx.closePath();
-                        ctx.fillStyle = slice.color;
-                        ctx.fill();
+                        ctx.arc(8.5, 8.5, outerRadius, 0, 2 * Math.PI); // Centered at (8.5, 8.5)
+                        ctx.fillStyle = "none"; // No fill color
+                        ctx.strokeStyle = "black";
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
 
-                        startAngle += sliceAngle;
-                    });
+                        // Sort the pieData array so that slices with defined ssp come first
+                        pieData.sort((a, b) => {
+                            if (a.ssp === "undefined") return 1;
+                            if (b.ssp === "undefined") return -1;
+                            return 0;
+                        });
+
+                        let startAngle = -Math.PI / 2; // Start from the top (12 o'clock position)
+                        pieData.forEach((slice) => {
+                            const sliceAngle = (slice.count / recordingsAtLocation.length) * 2 * Math.PI;
+
+                            // Draw each pie chart segment
+                            ctx.beginPath();
+                            ctx.moveTo(8.5, 8.5);
+                            const innerRadius = 6.5; // Adjust the inner radius as needed for 17x17 size
+                            ctx.arc(8.5, 8.5, innerRadius, startAngle, startAngle + sliceAngle);
+                            ctx.closePath();
+                            ctx.fillStyle = slice.color;
+                            ctx.fill();
+
+                            startAngle += sliceAngle;
+                        });
 
 
-                    const icon = L.divIcon({
-                        className: "pie-chart-marker",
-                        html: `<img src="${canvas.toDataURL()}" width="17" height="17" />`, // Adjust width and height to 17x17
-                    });
+                        const icon = L.divIcon({
+                            className: "pie-chart-marker",
+                            html: `<img src="${canvas.toDataURL()}" width="17" height="17" />`, // Adjust width and height to 17x17
+                        });
 
-                    let info = "<strong>Subspecies in this location:</strong><br>";
-                    Object.keys(subspeciesCounts).forEach((subspecies) => {
-                        info += `${subspecies}: ${subspeciesCounts[subspecies]} recordings<br>`;
-                    });
+                        let info = "<strong>Subspecies in this location:</strong><br>";
+                        Object.keys(subspeciesCounts).forEach((subspecies) => {
+                            info += `${subspecies}: ${subspeciesCounts[subspecies]} recordings<br>`;
+                        });
 
-                    const marker = L.marker([lat, lng], {
-                        icon: icon,
-                        zIndexOffset: recordingsAtLocation.some(rec => rec.ssp) ? 1000 : 0
-                    });
-                    marker.bindPopup(info);
-                    // Add the marker to the layerGroup
-                    markersLayer.addLayer(marker);
+                        const marker = L.marker([lat, lng], {
+                            icon: icon,
+                            zIndexOffset: recordingsAtLocation.some(rec => rec.ssp) ? 1000 : 0
+                        });
+                        marker.bindPopup(info);
+                        // Add the marker to the layerGroup
+                        markersLayer.addLayer(marker);
 
-                    // After creating all markers, fit the map view to the bounds
-                    bounds.extend(marker.getLatLng());
+                        // After creating all markers, fit the map view to the bounds
+                        bounds.extend(marker.getLatLng());
 
-                    markersLayer.addTo(map);
+                        markersLayer.addTo(map);
 
-                    marker.bindPopup(info);
-                }
-
-                const kmzLayer = new L.KMZLayer("Corvus_brachyrhynchos.kmz");
-                kmzLayer.addTo(map);
-
-                document.getElementById('kmzToggle').addEventListener('change', function (e) {
-                    if (e.target.checked) {
-                        if (kmzLayer) kmzLayer.addTo(map);
-                    } else {
-                        if (kmzLayer) map.removeLayer(kmzLayer);
+                        marker.bindPopup(info);
                     }
+
+
+                    document.getElementById('kmzToggle').addEventListener('change', function (e) {
+                        if (e.target.checked) {
+                            if (kmzLayer) kmzLayer.addTo(map);
+                        } else {
+                            if (kmzLayer) map.removeLayer(kmzLayer);
+                        }
+                    });
+
+
+
+                    map.fitBounds(bounds);
+
+                    // Update the kmzLayer with the selected species
+                    kmzLayer = new L.KMZLayer(`${species}.kmz`);
+                    kmzLayer.addTo(map);
+
+
+
+
                 });
-
-                map.fitBounds(bounds);
-
-
-
-
-
-            });
-
-        // Create a custom control with checkboxes
+        }
+        // Create a custom control with checkboxes and a dropdown
         const toggleControl = L.control({ position: 'topright' });
+
         toggleControl.onAdd = function (map) {
-            const div = L.DomUtil.create('div', 'layer-toggle-control');
-            div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
-            div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show KMZ Layer</label></div>';
-            return div;
-        };
-        toggleControl.addTo(map);
+    const div = L.DomUtil.create('div', 'layer-toggle-control');
+    div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
+    div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show Species Ranges</label></div>';
+    div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option></select></label></div>';
+    return div;
+};
+toggleControl.addTo(map);
+
+
 
         // Attach some CSS styles
         const style = document.createElement('style');
@@ -412,7 +453,7 @@
         document.head.appendChild(style);
 
 
-        // Attach event listeners to the checkboxes
+        // Attach event listeners to the checkboxes and dropdown
         document.getElementById('markersToggle').addEventListener('change', function (e) {
             if (e.target.checked) {
                 markersLayer.addTo(map);
@@ -421,6 +462,18 @@
             }
         });
 
+
+
+        // Initialize the map with the first species in the dropdown
+        const initialSpecies = document.getElementById('speciesSelect').value;
+        fetchData(initialSpecies);
+
+
+        // Dropdown selection event listener
+        document.getElementById('speciesSelect').addEventListener('change', function (e) {
+            const selectedSpecies = e.target.value;
+            fetchData(selectedSpecies);
+        });
 
     </script>
 
