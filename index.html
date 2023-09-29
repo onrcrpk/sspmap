@@ -228,34 +228,34 @@
 
 
 
-                        function getColor(subspecies) {
-    if (subspecies === "undefined") return "lightgray";
+                    function getColor(subspecies) {
+                        if (subspecies === "undefined") return "lightgray";
 
-    const index = uniqueSubspecies.indexOf(subspecies);
-    const totalSubspecies = uniqueSubspecies.length;
+                        const index = uniqueSubspecies.indexOf(subspecies);
+                        const totalSubspecies = uniqueSubspecies.length;
 
-    // Calculate Hue - Uniformly distribute hues around the circle
-    const hue = (index / (totalSubspecies || 1)) * 180;
+                        // Calculate Hue - Uniformly distribute hues around the circle
+                        const hue = (index / (totalSubspecies || 1)) * 180;
 
-    // Define array of saturation and lightness combinations for smoother transitions at the beginning
-    const variations = [
-        { s: 90, l: 60 },  // Smoother transitions
-        { s: 80, l: 65 },
-        { s: 100, l: 50 },
-        { s: 80, l: 60 },
-        { s: 100, l: 40 }, 
-        { s: 90, l: 50 },  // More distinct transitions towards green
-        { s: 100, l: 30 },
-        { s: 90, l: 40 },
-        { s: 80, l: 50 },
-        { s: 100, l: 20 }, // Most distinct
-    ];
+                        // Define array of saturation and lightness combinations for smoother transitions at the beginning
+                        const variations = [
+                            { s: 90, l: 60 },  // Smoother transitions
+                            { s: 80, l: 65 },
+                            { s: 100, l: 50 },
+                            { s: 80, l: 60 },
+                            { s: 100, l: 40 },
+                            { s: 90, l: 50 },  // More distinct transitions towards green
+                            { s: 100, l: 30 },
+                            { s: 90, l: 40 },
+                            { s: 80, l: 50 },
+                            { s: 100, l: 20 }, // Most distinct
+                        ];
 
-    // Pick variation based on index
-    const variation = variations[index % variations.length];
+                        // Pick variation based on index
+                        const variation = variations[index % variations.length];
 
-    return `hsl(${hue}, ${variation.s}%, ${variation.l}%)`;
-}
+                        return `hsl(${hue}, ${variation.s}%, ${variation.l}%)`;
+                    }
 
 
 
@@ -272,9 +272,16 @@
                             const subspecies = recording.ssp || "undefined";
                             counts[subspecies] = (counts[subspecies] || 0) + 1;
                         });
-                        uniqueSubspecies.sort().forEach((subspecies) => {
-    div.innerHTML += `<i style="background:${getColor(subspecies)}"></i> ${subspecies}: ${counts[subspecies] || 0}<br>`;
-});
+                        // Sorting the uniqueSubspecies array alphanumerically, ensuring "undefined" comes last
+                        const uniqueSubspecies = [...new Set(recordings.map((recording) => recording.ssp || "undefined"))]
+                            .sort((a, b) => (a === "undefined" ? 1 : b === "undefined" ? -1 : a.localeCompare(b)));
+
+                        // Iterating over the sorted array to create HTML elements
+                        uniqueSubspecies.forEach((subspecies) => {
+                            div.innerHTML += `<i style="background:${getColor(subspecies)}"></i> ${subspecies}: ${counts[subspecies] || 0}<br>`;
+                        });
+
+                        // Returning the div
                         return div;
                     };
                     legend.addTo(map);
@@ -421,13 +428,13 @@
         const toggleControl = L.control({ position: 'topright' });
 
         toggleControl.onAdd = function (map) {
-    const div = L.DomUtil.create('div', 'layer-toggle-control');
-    div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
-    div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show Species Ranges</label></div>';
-    div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option></select></label></div>';
-    return div;
-};
-toggleControl.addTo(map);
+            const div = L.DomUtil.create('div', 'layer-toggle-control');
+            div.innerHTML = '<div class="toggle-container"><label><input type="checkbox" id="markersToggle" checked> Show Markers</label></div>';
+            div.innerHTML += '<div class="toggle-container"><label><input type="checkbox" id="kmzToggle" checked> Show Species Ranges</label></div>';
+            div.innerHTML += '<div class="toggle-container"><label><select id="speciesSelect"><option value="" selected disabled>Select species</option><option value="Corvus brachyrhynchos">Corvus brachyrhynchos</option><option value="Corvus capensis">Corvus capensis</option><option value="Corvus splendens">Corvus splendens</option><option value="Corvus orru">Corvus orru</option><option value="Corvus corax">Corvus corax</option></select></label></div>';
+            return div;
+        };
+        toggleControl.addTo(map);
 
 
 
